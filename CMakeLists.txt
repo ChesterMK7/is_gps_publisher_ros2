@@ -12,10 +12,10 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 add_executable(gps_output_publisher src/gps_output_parser.cpp)
-ament_target_dependencies(IS_GPS_publisher_ros2 rclcpp std_msgs sensor_msgs geometry_msgs)
+ament_target_dependencies(gps_output_publisher rclcpp std_msgs sensor_msgs geometry_msgs)
 
 install(TARGETS
-  IS_GPS_publisher_ros2
+  gps_output_publisher
   DESTINATION lib/${PROJECT_NAME})
 # uncomment the following section in order to fill in
 # further dependencies manually.

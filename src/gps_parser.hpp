@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser header file for Scout 2.0 Autonomous Navigation Project
-// Version 1.05 (2025-07-01)
+// Version 1.0.6 (2025-07-01)
 
 #define FRAME "" // Frame name
 #define PORT 25565 // Port used
