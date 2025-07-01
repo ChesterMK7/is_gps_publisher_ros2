@@ -1,4 +1,4 @@
-# IS_GPS_publisher_ros2
+# is_gps_publisher_ros2
 
 A GPS and IMU data parser and publisher ROS2 package. Takes in [NMEA](https://github.com/inertialsense/docs.inertialsense.com/blob/1.11.0/docs/user-manual/com-protocol/nmea.md) messages from a specified network port using UDP packets, then parses them and outputs the parsed GPS and IMU data in the sensor_messages [Imu](https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/Imu.msg) and [NavSatFix](https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/NavSatFix.msg) formats as ROS2 topics.
 
@@ -21,22 +21,20 @@ Inertial Sense uINS
 Create a ROS2 Workspace
 
 ``` bash
-mkdir gpsWS
-cd gpsWS
-mkdir src
-cd src
+mkdir -p gpsWS/src
+cd gpsWS/src
 ```
 
 Clone the respository in the src folder
 
 ``` bash
-git clone https://github.com/ChesterMK7/IS_GPS_publisher_ros2
+git clone https://github.com/ChesterMK7/is_gps_publisher_ros2
 ```
 
 Make sure to configure the network port and frame id you are using
 
 ``` bash
-nano IS_GPS_publisher_ros2/src/gps_parser.hpp
+nano is_gps_publisher_ros2/src/gps_parser.hpp
 ```
 
 Specifically modify these lines in gps_parser.hpp
@@ -66,7 +64,7 @@ source install/setup.bash
 Run the parser/publisher node
 
 ``` bash
-ros2 launch IS_GPS_publisher_ros2 gps_output_publisher
+ros2 launch is_gps_publisher_ros2 gps_output_publisher
 ```
 
 ### Viewing output data
