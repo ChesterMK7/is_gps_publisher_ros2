@@ -65,7 +65,7 @@ source install/setup.bash
 Run the parser/publisher node
 
 ``` bash
-ros2 launch is_gps_publisher_ros2 gps_output_publisher
+ros2 run is_gps_publisher_ros2 gps_output_publisher
 ```
 
 ### Viewing output data
