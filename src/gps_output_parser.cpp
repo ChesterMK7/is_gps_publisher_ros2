@@ -38,11 +38,13 @@ class ParsedOutputPublisher : public rclcpp::Node
       std_msgs::msg::Header hd = makeHeader(clock.now());
       if (1 == output.dataType()) {
         sensor_msgs::msg::NavSatFix messageGPS = output.GPSoutputROS();
+        hd.frame_id = GPS_FRAME;
         messageGPS.header = hd;
         publisherGPS_->publish(messageGPS);
       }
       else if (2 == output.dataType()) {
         sensor_msgs::msg::Imu messageIMU = output.IMUoutputROS();
+        hd.frame_id = IMU_FRAME;
         messageIMU.header = hd;
         publisherIMU_->publish(messageIMU);
       }

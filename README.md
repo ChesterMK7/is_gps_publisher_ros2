@@ -40,7 +40,8 @@ nano is_gps_publisher_ros2/src/gps_parser.hpp
 Specifically modify these lines in gps_parser.hpp
 
 ``` cpp
-#define FRAME "" // Frame name
+#define GPS_FRAME "gps_link" // GPS frame name
+#define IMU_FRAME "imu_link" // IMU frame name
 #define PORT 25565 // Port used
 #define MAXLINE 256 // Maximum line length
 ```

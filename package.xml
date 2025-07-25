@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>is_gps_publisher_ros2</name>
-  <version>1.0.6</version>
+  <version>1.1.0</version>
   <description>GPS and IMU data parser and publisher ROS2 package, created for the 
     Scout 2.0 Autonomous Navigation Project at Clarkson University.</description>
   <maintainer email="kitchear@clarkson.edu">Adam Kitchen</maintainer>

@@ -1,7 +1,8 @@
 // Inertial Sense GPS & IMU data parser header file for Scout 2.0 Autonomous Navigation Project
 // Version 1.0.6 (2025-07-01)
 
-#define FRAME "" // Frame name
+#define GPS_FRAME "gps_link" // GPS frame name
+#define IMU_FRAME "imu_link" // IMU frame name
 #define PORT 25565 // Port used
 #define MAXLINE 256 
 // Modified UDP server code that runs GPS parser
@@ -277,7 +278,7 @@ std_msgs::msg::Header makeHeader(rclcpp::Time t) {
     builtin_interfaces::msg::Time rTime = getTime(t.seconds());
     std_msgs::msg::Header output;
     output.stamp = rTime;
-    output.frame_id = FRAME;
+    output.frame_id = "";
     return output;
 }
 
