@@ -50,7 +50,7 @@ Return to the workspace directory and build using colcon
 
 ``` bash
 cd ..
-source /opt/ros/<ros2-version>/setup.bash
+source /opt/ros/<ros2-distro>/setup.bash
 colcon build
 ```
 
@@ -75,13 +75,13 @@ Open a new terminal tab/window
 IMU
 
 ``` bash
-source /opt/ros/<ros2-version>/setup.bash
+source /opt/ros/<ros2-distro>/setup.bash
 ros2 topic echo /imu
 ```
 
 GPS
 
 ``` bash
-source /opt/ros/<ros2-version>/setup.bash
+source /opt/ros/<ros2-distro>/setup.bash
 ros2 topic echo /nav_sat_fix
 ```

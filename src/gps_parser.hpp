@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser header file for Scout 2.0 Autonomous Navigation Project
-// Version 1.0.6 (2025-07-01)
+// Version 1.0.7 (2026-06-26)
 
 #define GPS_FRAME "gps_link" // GPS frame name
 #define IMU_FRAME "imu_link" // IMU frame name
@@ -189,70 +189,88 @@ msgdata coordParser (std::string inp) {
                     valD[field-1] = stod(temp);
                 }
                 if (form == 1 && field <= 13) {
-                    if (field == 3) valC[0] = temp[0];
-                    else if (field == 5) valC[1] = temp[0];
-                    else if (field == 6) valI[2] = stoi(temp);
-                    else if (field == 7) valI[3] = stoi(temp);
-                    else if (field == 8) valD[3] = stod(temp);
-                    else if (field == 9) valD[4] = stod(temp);
-                    else if (field == 11) valD[5] = stod(temp);
-                    else if (field == 13) {
-                        if (temp != "") valD[6] = stod(temp);
-                    }
-                    else if (field == 1 || field == 2 || field == 4) {
-                        for (int l = 0; l < temp.size(); l++) {
-                            if (temp[l] == '.') {
-                                dec = l;
-                                l = temp.size();
-                            }
-                        }
-                        temp2 = "";
-                        if (dec >= 2) ofs = 2;
-                        else ofs = dec;
-                        for (int m = dec-ofs; m < temp.size(); m++) {
-                            temp2 = temp2 + temp[m];
-                        }
-                        if (field == 2) {valD[1] = stod(temp2);}
-                        else if (field == 4) valD[2] = stod(temp2);
-                        else valD[0] = stod(temp2);
-                        temp2 = "";
-                        ofs = dec - 3;
-                        if (field == 2 || field == 4) {
-                            if (ofs >= 0) {
-                                for (int n = 0; n <= ofs; n++) {
-                                    temp2 += temp[n];
+                    switch(field) {
+                        case 3:
+                            valC[0] = temp[0];
+                            break;
+                        case 5:
+                            valC[1] = temp[0];
+                            break;
+                        case 6:
+                            valI[2] = stoi(temp);
+                            break;
+                        case 7:
+                            valI[3] = stoi(temp);
+                            break;
+                        case 8:
+                            valD[3] = stod(temp);
+                            break;
+                        case 9:
+                            valD[4] = stod(temp);
+                            break;
+                        case 11:
+                            valD[5] = stod(temp);
+                            break;
+                        case 13:
+                            if (temp != "") valD[6] = stod(temp);
+                            break;
+                        case [1,2,4]:
+                            for (int l = 0; l < temp.size(); l++) {
+                                if (temp[l] == '.') {
+                                    dec = l;
+                                    l = temp.size();
                                 }
                             }
-                            else temp2 = "0";
-                            if (field == 2) {valI[0] = stoi(temp2);}
-                            else valI[1] = stoi(temp2);
-                        }
-                        else {
-                            valS = temp;
-                            if (ofs >= 1) {
-                                temp2 += temp[ofs-1];
-                                temp2 += temp[ofs];
-                                valI[5] = stoi(temp2);
-                                temp2 = "";
-                                if (ofs == 2) {
-                                    temp2 += temp[ofs-2];
+                            temp2 = "";
+                            if (dec >= 2) ofs = 2;
+                            else ofs = dec;
+                            for (int m = dec-ofs; m < temp.size(); m++) {
+                                temp2 = temp2 + temp[m];
+                            }
+                            if (field == 2) {valD[1] = stod(temp2);}
+                            else if (field == 4) valD[2] = stod(temp2);
+                            else valD[0] = stod(temp2);
+                            temp2 = "";
+                            ofs = dec - 3;
+                            if (field == 2 || field == 4) {
+                                if (ofs >= 0) {
+                                    for (int n = 0; n <= ofs; n++) {
+                                        temp2 += temp[n];
+                                    }
                                 }
-                                else if (ofs == 3) {
-                                    temp2 += temp[ofs-3];
-                                    temp2 += temp[ofs-2];
-                                }
-                                if (temp2 != "") valI[4] = stoi(temp2);
-                                else valI[4] = 0;
+                                else temp2 = "0";
+                                if (field == 2) {valI[0] = stoi(temp2);}
+                                else valI[1] = stoi(temp2);
                             }
                             else {
-                                valI[4] = 0;
-                                if (ofs == 0) {
-                                    temp2 += temp[0];
+                                valS = temp;
+                                if (ofs >= 1) {
+                                    temp2 += temp[ofs-1];
+                                    temp2 += temp[ofs];
                                     valI[5] = stoi(temp2);
+                                    temp2 = "";
+                                    if (ofs == 2) {
+                                        temp2 += temp[ofs-2];
+                                    }
+                                    else if (ofs == 3) {
+                                        temp2 += temp[ofs-3];
+                                        temp2 += temp[ofs-2];
+                                    }
+                                    if (temp2 != "") valI[4] = stoi(temp2);
+                                    else valI[4] = 0;
                                 }
-                                else valI[5] = 0;
+                                else {
+                                    valI[4] = 0;
+                                    if (ofs == 0) {
+                                        temp2 += temp[0];
+                                        valI[5] = stoi(temp2);
+                                    }
+                                    else valI[5] = 0;
+                                }
                             }
-                        }
+                            break;
+                        default:
+                            break;
                     }
                 }
             } 
