@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser header file for Scout 2.0 Autonomous Navigation Project
-// Version 1.0.7 (2026-06-26)
+// Version 1.1.1 (2026-06-26)
 
 #define GPS_FRAME "gps_link" // GPS frame name
 #define IMU_FRAME "imu_link" // IMU frame name

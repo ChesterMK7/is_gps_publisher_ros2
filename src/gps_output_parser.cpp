@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser ROS node file for Scout 2.0 Autonomous Navigation Project
-// Version 1.0.7 (2025-06-26)
+// Version 1.1.1 (2025-06-26)
 
 #include "gps_parser.hpp"
 using namespace std::chrono_literals;
