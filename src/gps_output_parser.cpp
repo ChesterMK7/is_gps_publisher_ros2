@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser ROS node file for Scout 2.0 Autonomous Navigation Project
-// Version 1.1.1 (2025-06-26)
+// Version 1.2.0 (2026-07-02)
 
 #include "gps_parser.hpp"
 using namespace std::chrono_literals;
@@ -34,7 +34,7 @@ class ParsedOutputPublisher : public rclcpp::Node
       n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, ( struct sockaddr *) &cliaddr, &len); 
       buffer[n] = '\0'; 
       printf("Recieved: %s\n", buffer);
-      output = coordParser(buffer);
+      output = msgParser(buffer);
       std_msgs::msg::Header hd = makeHeader(clock.now());
       if (1 == output.dataType()) {
         sensor_msgs::msg::NavSatFix messageGPS = output.GPSoutputROS();

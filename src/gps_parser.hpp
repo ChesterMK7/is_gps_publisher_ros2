@@ -1,5 +1,5 @@
 // Inertial Sense GPS & IMU data parser header file for Scout 2.0 Autonomous Navigation Project
-// Version 1.1.1 (2026-06-26)
+// Version 1.2.0 (2026-07-02)
 
 #define GPS_FRAME "gps_link" // GPS frame name
 #define IMU_FRAME "imu_link" // IMU frame name
@@ -29,17 +29,35 @@ using namespace std::chrono_literals;
 
 class msgdata {
     public:
-        void setData(double d[7], int i[7], char c[2], std::string u); 
-        void printData();
+        void setGPSData(int lat_deg, double lat_min, char lat_dir, int lon_deg, double lon_min, char lon_dir, double h, double alt, int fix) {
+            hdop = h; fix_qual = fix; altitude = alt;
+            lat = lat_deg + (lat_min/60);
+            lat = lat_deg + (lat_min/60);
+            if (lat_dir == 'S') lat = lat * -1;
+            lon = lon_deg + (lon_min/60);
+            if (lon_dir == 'W') lon = lon * -1;
+            msg_type = 1;
+            std::cout << lat << " | " << lon << "\n";
+        }
+        void setIMUData(double ang_vel[3], double lin_accel[3]) {
+            for (int i = 0; i < 3; i++) {
+                angular_velocity[i] = ang_vel[i];
+                linear_acceleration[i] = lin_accel[i];
+            }
+            msg_type = 2;
+        }
         sensor_msgs::msg::Imu IMUoutputROS();
         sensor_msgs::msg::NavSatFix GPSoutputROS();
-        int dataType() {return ia[6];}
+        int dataType() {return msg_type;}
     private:
-        double da[7];
-        // For DGGA: ia[4] = utc_hr, ia[5] = utc_min;
-        int ia[7];
-        char ca[2];
-        std::string sv;
+        // Shared variable
+        int msg_type = 0;
+        // IMU Variables
+        double angular_velocity[3];
+        double linear_acceleration[3];
+        // GGA Variables
+        int fix_qual;
+        double lat, lon, hdop, altitude;
 };
 
 // Driver code 
@@ -69,25 +87,26 @@ sensor_msgs::msg::NavSatFix msgdata::GPSoutputROS() {
     sensor_msgs::msg::NavSatFix output;
     sensor_msgs::msg::NavSatStatus statusGPS;
     int8_t status;
-    if (ia[2] == 1) status = 0;
-    else if (ia[2] == 2) status = 1;
-    else if (ia[2] == 4 ||  ia[2] == 5) status = 2;
-    else status = -1;
+    switch(fix_qual) {
+        case 1:
+            status = 0;
+            break;
+        case 2:
+            status = 1;
+            break;
+        case 4: case 5:
+            status = 2;
+            break;
+        default:
+            status = -1;
+    }
     statusGPS.status = status;
     statusGPS.service = 1;
     output.status = statusGPS;
-    // latitude [degrees]. Positive is north of equator; negative is south.
-    double lat = ia[0] + (da[1]/60);
-    if (ca[0] == 'S') lat = lat * -1;
     output.latitude = lat;
-    // longitude [degrees]. Positive is east of prime meridian; negative is west.
-    double lon = ia[1] + (da[2]/60);
-    if (ca[1] == 'W') lon = lon * -1;
     output.longitude = lon;
-    // altitude [m]. Positive is above the WGS 84 ellipsoid
-    output.altitude = da[4];
+    output.altitude = altitude;
     double position_covariance[9] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    double hdop = da[3];
     position_covariance[0] = hdop*hdop; // hDop^2
     position_covariance[4] = position_covariance[0];
     position_covariance[8] = 4 * position_covariance[0]; // (2*hDop)^2
@@ -103,16 +122,16 @@ sensor_msgs::msg::Imu msgdata::IMUoutputROS() {
         double orientation_covariance[9] = {-1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
         double angular_velocity_covariance[9] = {0.05,0.0,0.0,0.0,0.05,0.0,0.0,0.0,0.05};
         double linear_acceleration_covariance[9] = {0.05,0.0,0.0,0.0,0.05,0.0,0.0,0.0,0.05};
-        geometry_msgs::msg::Vector3 angular_velocity;
-        geometry_msgs::msg::Vector3 linear_acceleration;
-        angular_velocity.x = da[1];
-        angular_velocity.y = da[2];
-        angular_velocity.z = da[3];
-        linear_acceleration.x = da[4];
-        linear_acceleration.y = da[5];
-        linear_acceleration.z = da[6];
-        output.angular_velocity = angular_velocity;
-        output.linear_acceleration = linear_acceleration;
+        geometry_msgs::msg::Vector3 ang_vel;
+        geometry_msgs::msg::Vector3 lin_accel;
+        ang_vel.x = angular_velocity[0];
+        ang_vel.y = angular_velocity[1];
+        ang_vel.z = angular_velocity[2];
+        lin_accel.x = linear_acceleration[0];
+        lin_accel.y = linear_acceleration[1];
+        lin_accel.z = linear_acceleration[2];
+        output.angular_velocity = ang_vel;
+        output.linear_acceleration = lin_accel;
         for (int i = 0; i < 9; i++) {
         	output.orientation_covariance[i] = orientation_covariance[i];
         	output.angular_velocity_covariance[i] = angular_velocity_covariance[i];
@@ -121,47 +140,14 @@ sensor_msgs::msg::Imu msgdata::IMUoutputROS() {
         return output;
 }
 
-void msgdata::setData(double d[7], int i[7], char c[2], std::string u) {
-    for (int i = 0; i < 7; i++) da[i] = d[i];
-    for (int j = 0; j < 7; j++) ia[j] = i[j];
-    ca[0] = c[0]; ca[1] = c[1]; sv = u;
-}
-
-void msgdata::printData() {
-    if (ia[6] == 1) {
-        std::string fq[9] = {"invalid","GPS fix","DGPS fix","PPS fix","RTK Fix","RTK Float","estimated","Manual input mode","Simulation mode"};
-       std::cout << "GPS Data\n";
-       std::cout << "UTC Time: " << sv[0] << sv[1] << ":";
-       std::cout << sv[2] << sv[3] << ":";
-        for (int i = 4; i < sv.size(); i++) {
-           std::cout << sv[i];
-        }
-       std::cout << "\nLatitude: " << ia[0] << " Degrees, " << da[1] << " Minutes " << ca[0];
-       std::cout << "\nLongitude: " << ia[1] << " Degrees, " << da[2] << " Minutes " << ca[1];
-       std::cout << "\nAltitude: " << da[4] << " Meters";
-       std::cout << "\nHorizontal dilution of precision: " << da[3] << " Meters";
-       std::cout <<"\nUndulation: " << da[5] << " Meters";
-       std::cout << "\nFix Quality: " << fq[ia[2]] << "\nSatilites Used: " << ia[3] << "\n";
-        if (da[6] != 0) {std::cout << "Seconds since last update: " << da[6] << "\n";}
-    }
-    else if (ia[6] == 2) {
-       std::cout << "IMU Data\n";
-       std::cout << "Time: " << da[0] << "s\n";
-       std::cout << "Angular Rate Gyro (rad/sec)\nX: " << da[1] << " Y: " << da[2];
-       std::cout << " Z: " << da[3] << "\nLinear Accel(m/s/s)\nX: " << da[4];
-       std::cout << " Y: " << da[5] << " Z: " << da[6] << "\n";
-    }
-    else std::cout << "Indvalid Data Type " << ia[6] << "\n";
-}
-
-msgdata coordParser (std::string inp) {
+msgdata msgParser (std::string inp) {
     std::string temp, temp2 = ""; 
     int min, form, field, dec, ofs;
     min = form = field = dec = ofs = 0;
-    int valI[7] = {0,0,0,0,0,0};
-    double valD[7] = {0,0,0,0,0,0,0};
-    char valC[2] = {' ',' '};
-    std::string valS = "";
+    int lat_deg, lon_deg, fix = 0;
+    double lat_min, lon_min, hdop, alt = 0;
+    double ang_vel[3], lin_accel[3] = {0,0,0};
+    char lat_dir, lon_dir = ' ';
     msgdata outp;
     for (int i = 0; i < inp.size(); i++) {
         if (inp[i] == ',' || i + 1 == inp.size() || inp[i] == '*') {
@@ -170,7 +156,6 @@ msgdata coordParser (std::string inp) {
             for (int k = min; k < i; k++) {
                 temp = temp + inp[k];
             }
-            //cout << temp << "\n";
             if (min == 0) {
                 if (temp.length() == 6) {
                     temp2 = temp2 + temp[3] + temp[4] + temp[5];
@@ -180,41 +165,38 @@ msgdata coordParser (std::string inp) {
                 else if (temp.compare("$PIMU") == 0) form = 2;
                 else form = -1;
                 temp2 = "";
-                valI[6] = form;
             }
             else {
-                //cout << form << " | " << field << "\n";
-                //&& field > 0
                 if (form == 2 && field <= 8) {
-                    valD[field-1] = stod(temp);
+                    switch(field) {
+                        case 2: case 3: case 4:
+                            ang_vel[field-2] = stod(temp);
+                            break;
+                        case 5: case 6: case 7:
+                            lin_accel[field-5] = stod(temp);
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 if (form == 1 && field <= 13) {
                     switch(field) {
                         case 3:
-                            valC[0] = temp[0];
+                            lat_dir = temp[0];
                             break;
                         case 5:
-                            valC[1] = temp[0];
+                            lon_dir = temp[0];
                             break;
                         case 6:
-                            valI[2] = stoi(temp);
-                            break;
-                        case 7:
-                            valI[3] = stoi(temp);
+                            fix = stoi(temp);
                             break;
                         case 8:
-                            valD[3] = stod(temp);
+                            hdop = stod(temp);
                             break;
                         case 9:
-                            valD[4] = stod(temp);
+                            alt = stod(temp);
                             break;
-                        case 11:
-                            valD[5] = stod(temp);
-                            break;
-                        case 13:
-                            if (temp != "") valD[6] = stod(temp);
-                            break;
-                        case [1,2,4]:
+                        case 2: case 4:
                             for (int l = 0; l < temp.size(); l++) {
                                 if (temp[l] == '.') {
                                     dec = l;
@@ -227,47 +209,18 @@ msgdata coordParser (std::string inp) {
                             for (int m = dec-ofs; m < temp.size(); m++) {
                                 temp2 = temp2 + temp[m];
                             }
-                            if (field == 2) {valD[1] = stod(temp2);}
-                            else if (field == 4) valD[2] = stod(temp2);
-                            else valD[0] = stod(temp2);
+                            if (field == 2) lat_min = stod(temp2);
+                            else lon_min = stod(temp2);
                             temp2 = "";
                             ofs = dec - 3;
-                            if (field == 2 || field == 4) {
-                                if (ofs >= 0) {
-                                    for (int n = 0; n <= ofs; n++) {
-                                        temp2 += temp[n];
-                                    }
-                                }
-                                else temp2 = "0";
-                                if (field == 2) {valI[0] = stoi(temp2);}
-                                else valI[1] = stoi(temp2);
-                            }
-                            else {
-                                valS = temp;
-                                if (ofs >= 1) {
-                                    temp2 += temp[ofs-1];
-                                    temp2 += temp[ofs];
-                                    valI[5] = stoi(temp2);
-                                    temp2 = "";
-                                    if (ofs == 2) {
-                                        temp2 += temp[ofs-2];
-                                    }
-                                    else if (ofs == 3) {
-                                        temp2 += temp[ofs-3];
-                                        temp2 += temp[ofs-2];
-                                    }
-                                    if (temp2 != "") valI[4] = stoi(temp2);
-                                    else valI[4] = 0;
-                                }
-                                else {
-                                    valI[4] = 0;
-                                    if (ofs == 0) {
-                                        temp2 += temp[0];
-                                        valI[5] = stoi(temp2);
-                                    }
-                                    else valI[5] = 0;
+                            if (ofs >= 0) {
+                                for (int n = 0; n <= ofs; n++) {
+                                    temp2 += temp[n];
                                 }
                             }
+                            else temp2 = "0";
+                            if (field == 2) lat_deg = stoi(temp2);
+                            else lon_deg = stoi(temp2);
                             break;
                         default:
                             break;
@@ -278,7 +231,8 @@ msgdata coordParser (std::string inp) {
         field++;
         }
     }
-    outp.setData(valD,valI,valC,valS);
+    if (form == 1) outp.setGPSData(lat_deg,lat_min,lat_dir,lon_deg,lon_min,lon_dir,hdop,alt,fix);
+    else if (form == 2) outp.setIMUData(ang_vel,lin_accel);
     return outp;
 }
 
@@ -288,7 +242,6 @@ builtin_interfaces::msg::Time getTime(double secs) {
     builtin_interfaces::msg::Time output;
     output.sec = s;
     output.nanosec = ns;
-    //std::cout << std::to_string(secs) << "s\n" << s << "s\n" << ns << "ns\n";
     return output;
 }
 

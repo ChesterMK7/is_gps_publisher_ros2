@@ -10,11 +10,19 @@ Above messages sent as UDP packets to known network port
 
 ### Tested Using
 
-Ubuntu 22.04 ARM64    
-ROS2 Humble    
+#### Software
+
+Ubuntu 22.04    
+ROS2 Humble
+
+Linux Mint 22.3 (Ubuntu 24.04)  
+ROS2 Jazzy
+
+#### Hardware
+
 Nvidia Jetson AGX Orin    
 Inertial Sense uINS    
-[ISRoverNetworkNMEA](https://github.com/arcater/ISRoverNetworkNMEA)    
+[ISRoverNetworkNMEA](https://github.com/arcater/ISRoverNetworkNMEA)   
 
 ## Setup
 
